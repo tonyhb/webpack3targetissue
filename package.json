@@ -15,7 +15,7 @@
     "eslint-plugin-react": "^7.3.0",
     "extract-text-webpack-plugin": "^3.0.0",
     "react-hot-loader": "next",
-    "webpack": "3.5.5"
+    "webpack": "beta"
   },
   "depeendencies": {
     "superagent": "^3.6.0"

@@ -1,6 +1,5 @@
 const webpack = require('webpack');
 const path = require('path');
-const ExtractTextPlugin = require("extract-text-webpack-plugin");
 
 const env = process.env.NODE_ENV || 'development';
 const isProd = env === 'production';
@@ -57,26 +56,8 @@ const common = {
       {
         test: /\.(js|jsx)$/,
         exclude: /node_modules/,
-        use: isProd ? 'babel-loader' : ['react-hot-loader/webpack', 'babel-loader'],
-      },
-      // extract CSS as a separate file for cacheability.
-      {
-        test: /\.css$/,
-        loader: ExtractTextPlugin.extract({
-          fallback: 'style-loader',
-          use: [
-            {
-              loader: 'css-loader',
-              options: {
-                importLoaders: 1,
-                modules: true,
-                localIdentName: '[local]', // injected into extracttext; given from postcss
-              },
-            },
-            { loader: 'postcss-loader' },
-          ]
-        })
-      },
+        use: isProd ? 'babel-loader' : 'babel-loader',
+      }
     ],
   },
   resolve: {
@@ -86,55 +67,14 @@ const common = {
       path.resolve('./src'),
       'node_modules'
     ]
-  },
-  plugins: [
-    new ExtractTextPlugin({
-      filename: 'styles.css',
-      allChunks: true,
-    }),
-    new webpack.LoaderOptionsPlugin({
-      minimize: true,
-      debug: false,
-    }),
-    new webpack.DefinePlugin(configs),
-    new webpack.NoEmitOnErrorsPlugin(),
-    new webpack.optimize.UglifyJsPlugin({
-      compress: isProd,
-      output: {
-        comments: false,
-        semicolons: false,
-      },
-      sourceMap: false
-    }),
-    // name modules (vs. numbers) for better HMR logs
-    new webpack.NamedModulesPlugin(),
-  ]
+  }
 };
-
-if (isProd) {
-  // Breaks HMR; only enable for smaller filesizes in prod
-  common.plugins.push(new webpack.optimize.ModuleConcatenationPlugin());
-}
 
 const server = Object.assign({}, common, {
   entry: {
     server: ['./src/entry.server.js'],
   },
   target: 'node',
-  node: {
-    // prevent __dirname from rewriting to '/' for assets:
-    // https://github.com/webpack/webpack/issues/1599
-    __dirname: false,
-    __filename: false,
-  },
-  plugins: common.plugins.slice().concat([
-    new webpack.DefinePlugin({
-      __CLIENT__: false,
-      __SERVER__: true,
-      // 'formidable' sucks ass and hijacks require
-      "global.GENTLY": false,
-    }),
-  ]),
 });
 
 const client = Object.assign({}, common, {
@@ -142,12 +82,6 @@ const client = Object.assign({}, common, {
     client: ['./src/entry.client.js'],
   },
   target: 'web',
-  plugins: common.plugins.slice().concat([
-    new webpack.DefinePlugin({
-      __CLIENT__: true,
-      __SERVER__: false,
-    }),
-  ]),
 });
 
 module.exports = [server, client];
